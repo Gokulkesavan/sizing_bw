@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoIP Bandwidth Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f6fb;--card:#ffffff;--ink:#172338;--mut:#68778e;--line:#e1e8f2;
+  --acc:#2563eb;--accbg:#eaf2ff;--warn:#c2410c;
+  --payload:#2563eb;--headers:#f97316;--ether:#0f9f90;--wire:#8b5cf6;
+  --c2:var(--headers);--c3:var(--ether);--c4:var(--wire);
+  --shadow:0 8px 28px rgba(22,39,70,.045);color-scheme:light
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1320px;margin:0 auto;padding:36px 26px 76px}
+h1{font-size:30px;line-height:1.2;font-weight:600;letter-spacing:-.035em;margin:0 0 9px}
+h2{font-size:15px;line-height:1.3;font-weight:600;letter-spacing:-.01em;margin:0 0 17px}
+.sub{color:var(--mut);margin:0 0 28px;max-width:720px;font-size:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 362px;gap:22px;align-items:start}
+section{padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);margin:0 0 17px;min-width:0}
+section:first-child{border-top:1px solid var(--line);padding-top:22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:15px 16px}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;min-width:0}
+.fld small{font-weight:400;color:var(--mut);font-size:11.5px;line-height:1.45}
+input,select,button{font:inherit;color:inherit}
+input,select{width:100%;min-height:40px;padding:8px 11px;border:1px solid #d9e2ee;border-radius:10px;background:#fbfcfe;font-weight:400;transition:border-color .15s,box-shadow .15s,background .15s}
+input:hover,select:hover{border-color:#aebed3;background:#fff}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input.auto{background:#f7f9fc;border-style:dashed;color:var(--mut)}
+button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;transition:border-color .15s,background .15s,color .15s,transform .15s}
+button:hover{border-color:#b6c5d9;background:#f8faff}
+.seg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 15px}
+.seg button{padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:500;background:#f9fbfe}
+.seg button[aria-pressed=true]{background:var(--accbg);border-color:#a9c6ff;color:#1d4ed8;box-shadow:inset 0 0 0 1px rgba(37,99,235,.04)}
+.card{padding:17px 0;border-bottom:1px solid var(--line)}.card:first-child{padding-top:0}
+.ch{display:flex;justify-content:space-between;gap:12px;margin-bottom:13px}.ch b{font-weight:600}.ch small{display:block;color:var(--mut);font-size:11.5px;margin-top:2px}
+.x{border:0;background:#f5f7fb;color:#8190a6;padding:3px 9px;font-size:19px;line-height:1;border-radius:8px;align-self:flex-start}.x:hover{background:#fff1ed;color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}.chips label{border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:400;cursor:pointer;background:#fbfcff}
+.chips label:has(input:checked){background:var(--accbg);border-color:#9bbdff;color:#1d4ed8}.chips input{display:none}
+code.fm{display:block;margin-top:13px;padding:12px 13px;background:#f3f6fc;border:1px solid #e5ebf5;border-radius:11px;font:11.5px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow-x:auto;cursor:copy;color:#394963}
+details{margin-top:15px;border-top:1px solid #edf1f7;padding-top:10px}summary{cursor:pointer;color:#53647d;font-size:12.5px;font-weight:500;padding:3px 0}summary:hover{color:var(--ink)}
+.add{max-width:320px;margin-top:14px}
+.note{font-size:11.8px;color:var(--mut);margin:12px 0 0;max-width:760px;line-height:1.55}.warn{color:var(--warn)}
+aside{position:sticky;top:18px;border:1px solid #dbe5f3;border-radius:18px;background:var(--card);padding:19px;box-shadow:0 12px 34px rgba(22,39,70,.07);min-width:0}
+.result-summary{padding:17px 16px 15px;border:1px solid #dce8ff;border-radius:14px;background:linear-gradient(135deg,#eff6ff 0%,#f7f7ff 100%);margin-bottom:14px}
+.big{font-size:34px;font-weight:650;letter-spacing:-.045em;line-height:1.15;margin:6px 0 5px;color:#173f91;overflow-wrap:anywhere}.lbl{color:var(--mut);font-size:11.5px;line-height:1.45}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 1px;border-bottom:1px solid #edf1f7;font-size:12px}.kv:last-child{border-bottom:0}.kv span:first-child{color:var(--mut)}.kv span:last-child{text-align:right}
+.port-heading{margin:19px 0 9px;font-size:12.5px;font-weight:600}
+.port{display:grid;grid-template-columns:95px minmax(40px,1fr) 45px;gap:8px;align-items:center;font-size:11.5px;padding:7px 0}
+.bar{height:7px;border-radius:999px;background:#edf1f7;overflow:hidden;display:flex}.bar i{display:block;background:#9fb7d8;border-radius:999px}
+.port.fit .bar i{background:var(--acc)}.port.over .bar i{background:var(--warn)}.port.fit b{color:var(--acc)}.port b{text-align:right;font-size:11px;font-weight:600}
+.cap{font-size:11px;color:var(--mut);margin:9px 0 0;line-height:1.5}
+aside .go{width:100%;margin-top:16px}.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600;box-shadow:0 5px 12px rgba(37,99,235,.17)}.primary:hover{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.row{display:grid;grid-template-columns:175px minmax(0,1fr) 145px;gap:12px;align-items:center;padding:10px 0;font-size:12px;border-bottom:1px solid #f0f3f8}.row:last-of-type{border-bottom:0}.row>span{font-weight:500}.row small{color:var(--mut);text-align:right;font-size:11px}
+.stack{display:flex;height:15px;border-radius:999px;overflow:hidden;background:#edf1f7;box-shadow:inset 0 0 0 1px rgba(27,43,67,.045)}.stack i{display:block;min-width:0}
+.leg{display:flex;flex-wrap:wrap;gap:8px 15px;margin-top:12px;font-size:11.5px;color:var(--mut)}.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}tr:last-child td{border-bottom:0}tbody tr:hover{background:#f8faff}
+th{font-weight:600;color:var(--mut);font-size:10.5px;background:#f7f9fc}th:first-child,td:first-child{text-align:left}
+.st{display:grid;grid-template-columns:minmax(130px,190px) minmax(0,1fr) auto;gap:12px;padding:10px 0;border-bottom:1px solid #edf1f7;font-size:12px;align-items:start}
+.st code{font:11.5px/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--mut);white-space:normal;overflow-wrap:anywhere}.st b{color:#1d4ed8;font-weight:600;white-space:nowrap}
+h4{margin:19px 0 5px;font-size:12.5px;font-weight:600;color:#3d4e68}
+svg{display:block;width:100%;height:auto}.gl{stroke:#e0e7f0;stroke-dasharray:3 4}.tx{fill:#718099;font-size:11px}
+.chart-panel{padding:14px 12px 12px;border:1px solid #e2eaf6;border-radius:14px;background:linear-gradient(145deg,#fbfdff 0%,#f5f8fe 100%);overflow:hidden}
+.chart-panel .note{margin-top:9px}.chart-panel .leg{padding:0 4px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}aside{position:static;order:-1}.row{grid-template-columns:minmax(145px,180px) minmax(0,1fr) 130px}}
+@media(max-width:640px){main{padding:25px 13px 48px}h1{font-size:26px}.sub{margin-bottom:21px}section{padding:17px;border-radius:14px;margin-bottom:13px}.layout{gap:3px}aside{padding:15px}.result-summary{padding:15px}.big{font-size:31px}.grid{grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:13px}.row{grid-template-columns:1fr;gap:7px}.row small{text-align:left}.stack{width:100%!important}.st{grid-template-columns:1fr;gap:4px}.st b{white-space:normal}.port{grid-template-columns:95px minmax(35px,1fr) 42px}.chart-panel{padding:8px 5px 10px}.chart-panel .leg{padding:0 6px}}
+@media(prefers-reduced-motion:no-preference){.bar i,.stack i{transition:width .25s}}
+</style></head><body><main>
+<h1>VoIP bandwidth calculator</h1>
+<p class="sub">Choose your codecs, describe the network, and enter your call load. The result updates as you type, and every number can be traced step by step below.</p>
+<div class="layout"><div>
+<section><h2>Codecs</h2><div id="cards"></div><select id="add" class="add" aria-label="Add a codec"></select></section>
+<section><h2>Network</h2>
+<div class="seg" id="presets" role="group" aria-label="Network preset"><button data-p="4">IPv4</button><button data-p="6">IPv6</button><button data-p="b">Minimal</button><button data-p="s">Secure (SRTP)</button></div>
+<details><summary id="stack">Header details</summary><div class="grid" style="margin-top:12px">
+<label class="fld">IP version<select id="ipv"><option value="20">IPv4 (20 B)</option><option value="40">IPv6 (40 B)</option></select></label>
+<label class="fld">VLAN tags<select id="vlan"><option>0</option><option selected>1</option><option>2</option></select><small>4 B each. 2 = QinQ.</small></label>
+<label class="fld">SRTP authentication tag<select id="srtp"><option value="rtp" data-bytes="0">Plain RTP (0 B)</option><option value="hmac80" data-bytes="10">HMAC-SHA1-80 (10 B tag)</option><option value="hmac32" data-bytes="4">HMAC-SHA1-32 (4 B tag)</option><option value="gcm128-16" data-bytes="16">AEAD_AES_128_GCM (16 B tag)</option><option value="gcm256-16" data-bytes="16">AEAD_AES_256_GCM (16 B tag)</option></select><small>SRTP authentication-tag bytes added to each packet.</small></label>
+<label class="fld">SRTP MKI length<select id="mki"><option value="0" selected>0 B — not used</option><option value="1">1 B</option><option value="2">2 B</option><option value="4">4 B</option><option value="8">8 B</option><option value="16">16 B</option></select><small>Optional Master Key Identifier per packet; counted only when SRTP is selected.</small></label>
+<label class="fld">RTP CSRC entries<input id="csrc" type="number" value="0" min="0" max="15"><small>4 B each. Only mixers add these; pass-through SBC media is 0.</small></label>
+<label class="fld">RTP extension words<input id="ext" type="number" value="0" min="0"><small>RFC 8285, mostly WebRTC. SIP trunks use 0.</small></label>
+<label class="fld">Extra bytes per packet<input id="extra" type="number" value="0" min="0"><small>Tunnel or IPsec overhead.</small></label></div>
+<p class="note">Always included: UDP 8 B, Ethernet header 14 B, FCS 4 B, padding to a 64 B minimum frame. On-wire adds 20 B for preamble, start delimiter and inter-frame gap. SRTP adds the selected authentication tag and optional MKI; the MKI is ignored for plain RTP. BGP and plain L2/L3 routing add no packet bytes; for GRE, IPsec or MPLS enter the overhead as extra bytes.</p></details></section>
+<section><h2>Load</h2><div class="grid">
+<label class="fld">Concurrent calls<input id="cc" type="number" value="1000" min="0" step="any"><small>Active at the same moment. Drives media bandwidth.</small></label>
+<label class="fld">Calls per second<input id="cps" type="number" value="10" min="0" step="any"><small>New calls per second. Drives signalling and CPU.</small></label>
+<label class="fld">Call duration (s)<input id="aht" type="number" value="100" min="0" step="any"><small>Calls = CPS × duration. Edit any two; the third is calculated.</small></label>
+<label class="fld">Measure at<select id="basis"><option value="ip">IP packet</option><option value="l2">L2 frame (as in a pcap)</option><option value="w" selected>On the wire (link sizing)</option></select></label>
+<label class="fld">Media passes the device<select id="legs"><option value="1">Once</option><option value="2" selected>Twice (in and out)</option></select><small>Twice gives total SBC throughput.</small></label>
+<label class="fld">Talking time (%)<input id="act" type="number" value="100" min="1" max="100"><small>100 = no silence suppression.</small></label>
+<label class="fld">RTCP<select id="rtcp"><option value="0">Not included</option><option value="5" selected>5% of voice</option></select></label>
+<label class="fld">Safety margin<select id="head"><option value="0">None</option><option value="10">10%</option><option value="20">20%</option><option value="30">30%</option><option value="50">50%</option></select></label></div></section>
+<section><h2>Where the bytes go</h2><div id="bd"></div></section>
+</div>
+<aside><div class="result-summary"><div class="lbl">PER DIRECTION</div><div class="big" id="r1">–</div><div class="lbl" id="r2"></div></div><div id="rw" style="margin-top:12px"></div>
+<div class="port-heading">Fits on a port at</div><div id="ports"></div><button class="go primary" id="copy">Copy summary</button></aside></div>
+<section><h2>Per-codec figures</h2><div class="wrap"><table id="t1"></table></div></section>
+<section><h2>Working</h2><label class="fld" style="max-width:360px"><span>Show the steps for</span><select id="wsel"></select></label><div id="w1"></div></section>
+<section><h2>Scaling with call count</h2><div id="chart"></div></section>
+</main>
+<script>
+const $=i=>document.getElementById(i),f=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const AN=[[4.75,95],[5.15,103],[5.9,118],[6.7,134],[7.4,148],[7.95,159],[10.2,204],[12.2,244]],
+AW=[[6.6,132],[8.85,177],[12.65,253],[14.25,285],[15.85,317],[18.25,365],[19.85,397],[23.05,461],[23.85,477]],
+EV=[[7.2,18],[8,20],[9.6,24],[13.2,33],[16.4,41],[24.4,61],[32,80],[48,120],[64,160],[96,240],[128,320]];
+const C=[
+{id:'pcmu',g:'G.711 and wideband',n:'G.711 PCMU (µ-law) 64 kbps',r:'RFC 3551 §4.5.14',k:'s',fd:10,bf:80},
+{id:'pcma',g:'G.711 and wideband',n:'G.711 PCMA (A-law) 64 kbps',r:'RFC 3551 §4.5.14',k:'s',fd:10,bf:80},
+{id:'g722',g:'G.711 and wideband',n:'G.722 64 kbps',r:'RFC 3551 §4.5.2',k:'s',fd:10,bf:80},
+{id:'g729',g:'Low bitrate',n:'G.729 8 kbps',r:'RFC 3551 §4.5.6',k:'s',fd:10,bf:10},
+{id:'g7231h',g:'Low bitrate',n:'G.723.1 6.3 kbps',r:'RFC 3551 §4.5.3',k:'s',fd:30,bf:24},
+{id:'g7231l',g:'Low bitrate',n:'G.723.1 5.3 kbps',r:'RFC 3551 §4.5.3',k:'s',fd:30,bf:20},
+{id:'gsm',g:'Low bitrate',n:'GSM-FR 13 kbps',r:'RFC 3551 §4.5.8',k:'s',fd:20,bf:33},
+{id:'ilbc30',g:'Low bitrate',n:'iLBC 13.33 kbps (30 ms)',r:'RFC 3952',k:'s',fd:30,bf:50},
+{id:'ilbc20',g:'Low bitrate',n:'iLBC 15.2 kbps (20 ms)',r:'RFC 3952',k:'s',fd:20,bf:38},
+{id:'amrnb',g:'3GPP / mobile',n:'AMR (narrowband)',r:'RFC 4867',k:'a',fd:20,L:AN,cl:8000,nm:'AMR'},
+{id:'amrwb',g:'3GPP / mobile',n:'AMR-WB',r:'RFC 4867',k:'a',fd:20,L:AW,cl:16000,nm:'AMR-WB'},
+{id:'evs',g:'3GPP / mobile',n:'EVS',r:'3GPP TS 26.445 Annex A',k:'e',fd:20},
+{id:'opus',g:'Other',n:'Opus',r:'RFC 7587 / RFC 6716',k:'o',fd:20}];
+let items=[];const cod=id=>C.find(c=>c.id==id);
+function ptOpts(c){return(c.k=='o'?[10,20,40,60,80,100,120]:[10,20,30,40,50,60,80,90,100,120].filter(p=>p%c.fd==0))}
+function fmtp(it,c){if(c.k=='a'){const p=[],ix=r=>c.L.findIndex(x=>x[0]==r);p.push('octet-align='+it.oa);if(it.set.length<c.L.length)p.push('mode-set='+it.set.map(ix).sort((a,b)=>a-b).join(','));if(it.oa&&it.crc)p.push('crc=1');p.push('mode-change-period='+it.mcp,'mode-change-capability='+it.mcc,'mode-change-neighbor='+it.mcn);return`a=rtpmap:96 ${c.nm}/${c.cl}/1\na=fmtp:96 ${p.join('; ')}`}
+ return`a=rtpmap:97 EVS/16000/1\na=fmtp:97 br=${it.br}; hf-only=${it.hf}`}
+const R=(a,b,c)=>[a,b,c];
+function pay(it,c){const pt=it.pt,rw=[['#','Step 1: codec payload']];
+ if(c.k=='s'){const n=pt/c.fd,b=c.bf*n;rw.push(R('Frames per packet',`${pt} ms ÷ ${c.fd} ms`,n),R('Payload',`${n} × ${c.bf} B`,b+' B'));return[b,rw]}
+ if(c.k=='o'){const b=Math.ceil(it.opus*pt/8);rw.push(R('Payload',`ceil(${it.opus} kbps × ${pt} ms ÷ 8)`,b+' B'));return[b,rw]}
+ const n=pt/20;rw.push(R('Frames per packet',`${pt} ms ÷ 20 ms`,n));
+ if(c.k=='e'){const sb=EV.find(x=>x[0]==it.br)[1];rw.push(R('Speech bytes per frame',`${it.br} kbps × 20 ms ÷ 8`,sb+' B'));
+  if(!it.hf){rw.push(R('Payload (compact, no header)',`${n} × ${sb}`,n*sb+' B'));return[n*sb,rw]}
+  const b=1+n+n*sb;rw.push(R('Payload (header-full)',`CMR 1 + ToC ${n}×1 + speech ${n}×${sb}`,b+' B'));return[b,rw]}
+ const bits=c.L.find(x=>x[0]==it.mode)[1],sb=Math.ceil(bits/8);rw.push(R('Speech bits per frame',`${it.mode} kbps mode`,bits));
+ if(it.oa){const cr=it.crc?n:0,b=1+n+cr+n*sb;rw.push(R('Payload (octet-aligned)',`CMR 1 + ToC ${n}×1 + CRC ${cr} + speech ${n}×ceil(${bits}÷8)=${n}×${sb}`,b+' B'));return[b,rw]}
+ const t=4+6*n+n*bits,b=Math.ceil(t/8);rw.push(R('Total bits',`CMR 4 + ToC ${n}×6 + speech ${n}×${bits}`,t),R('Payload (bandwidth-efficient)',`ceil(${t} ÷ 8)`,b+' B'));return[b,rw]}
+function per(it,P){const c=cod(it.id),[pl,rw]=pay(it,c),rtp=12+4*P.csrc+(P.ext?4+4*P.ext:0),mki=P.srtp?P.mki:0,srtp=P.srtp+mki,ip=pl+rtp+srtp+8+P.iph+P.extra,tg=4*P.vlan,raw=ip+14+tg+4,fr=Math.max(raw,64),wire=fr+20,pps=1000/it.pt,bw=b=>b*8*pps/1000;
+ rw.push(['#','Step 2: IP packet'],R('RTP header',`12 + 4×${P.csrc} CSRC + extension ${P.ext?`(4 + 4×${P.ext})`:0}`,rtp+' B'),R('SRTP tag + MKI / UDP / IP',`${P.srtp} + ${mki} + 8 + ${P.iph}`,srtp+8+P.iph+' B'),R('Extra bytes','user input',P.extra+' B'),R('IP packet',`${pl} + ${rtp} + ${srtp+8+P.iph} + ${P.extra}`,ip+' B'),
+ ['#','Step 3: Ethernet frame'],R('Frame before padding',`${ip} + Eth 14 + VLAN tags ${P.vlan}×4 + FCS 4`,raw+' B'),R('Frame size','minimum 64 B',fr+' B'),R('On-wire size',`${fr} + 20 (preamble 7, SFD 1, IFG 12)`,wire+' B'),
+ ['#','Step 4: bandwidth'],R('Packets per second',`1000 ÷ ${it.pt} ms`,f(pps)+' pps'),R('Codec payload only',`${pl} × 8 × ${f(pps)}`,f(bw(pl))+' kbps'),R('IP packet',`${ip} × 8 × ${f(pps)}`,f(bw(ip))+' kbps'),R('L2 frame',`${fr} × 8 × ${f(pps)}`,f(bw(fr))+' kbps'),R('On-wire',`${wire} × 8 × ${f(pps)}`,f(bw(wire))+' kbps'));
+ return{it,c,pl,ip,fr,wire,pps,bpl:bw(pl),bip:bw(ip),bl2:bw(fr),bw:bw(wire),rw}}
+const lbl=o=>o.c.n+(o.c.k=='a'?' '+o.it.mode:o.c.k=='e'?' '+o.it.br:'')+', '+o.it.pt+' ms';
+const PAL=['#0f766e','#c2410c','#7c3aed','#be123c','#0369a1','#a16207','#4f46e5','#65a30d','#db2777','#475569'];
+function niceNum(x){if(!(x>0))return 0;const p=Math.pow(10,Math.floor(Math.log10(x))-1);return Math.max(1,Math.round(x/p)*p)}
+function niceCeil(x){if(!(x>0))return 1;const e=Math.pow(10,Math.floor(Math.log10(x))),m=x/e,nm=m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10;return nm*e}
+const nf=v=>{let s=v>=100?f(v,0):v>=10?f(v,1):f(v,2);if(s.includes('.'))s=s.replace(/0+$/,'').replace(/\.$/,'');return s};
+
+/* ================= UI layer ================= */
+const bw=k=>k>=1e6?f(k/1e6)+' Gbps':k>=1e3?f(k/1e3)+' Mbps':f(k,1)+' kbps';
+const IDS=['ipv','csrc','ext','srtp','vlan','extra','cc','cps','aht','basis','legs','act','rtcp','head','mki'],TRI=['cc','cps','aht'];
+const PORTS=[[1e5,'100 Mbps'],[1e6,'1000 Mbps'],[1e7,'10000 Mbps']];
+const PRE={4:[20,0,0,'rtp',1,0],b:[20,0,0,'rtp',0,0],s:[20,0,0,'hmac80',1,0],6:[40,0,0,'rtp',1,0]},H5=['ipv','csrc','ext','srtp','vlan','mki'];
+let drivers=['cc','cps'],WI=0,SUM='';
+$('add').innerHTML='<option value="">+ Add a codec</option>'+[...new Set(C.map(c=>c.g))].map(g=>`<optgroup label="${g}">${C.filter(c=>c.g==g).map(c=>`<option value="${c.id}">${c.n}</option>`).join('')}</optgroup>`).join('');
+const num=id=>{const v=parseFloat($(id).value);return isFinite(v)&&v>0?v:0};
+function sync(){const d=TRI.find(k=>!drivers.includes(k)),cc=num('cc'),cps=num('cps'),aht=num('aht');let v=0;
+ if(d=='aht'&&cps>0)v=cc/cps;else if(d=='cps'&&aht>0)v=cc/aht;else if(d=='cc')v=cps*aht;
+ if(v>0)$(d).value=+v.toFixed(3);TRI.forEach(k=>{$(k).classList.toggle('auto',k==d);$(k).title=k==d?'Calculated from the other two':''})}
+/* shares: a new codec takes an equal slice, the others shrink proportionally; edits are never overwritten */
+function rebalance(nw){const n=items.length;if(n==1){items[0].mix=100;return}
+ const s=100/n,all=items.reduce((a,i)=>a+i.mix,0);
+ if(nw==null){items.forEach(i=>i.mix=+(all>0?i.mix*100/all:s).toFixed(2));return}
+ const rest=all-items[nw].mix;
+ items.forEach((i,k)=>i.mix=+(k==nw?s:rest>0?i.mix*(100-s)/rest:s).toFixed(2))}
+function addItem(id){const c=cod(id),o=ptOpts(c);items.push({id,pt:o.includes(20)?20:o[0],mix:0,set:c.L?c.L.map(x=>x[0]):[],mode:c.L?c.L[c.L.length-1][0]:0,oa:0,crc:0,mcp:1,mcc:1,mcn:0,br:13.2,hf:0,opus:24});rebalance(items.length-1);draw()}
+const sel=(i,k,opts,v,d)=>`<select data-i="${i}" data-k="${k}" ${d?'disabled':''}>${opts.map(([val,lab])=>`<option value="${val}" ${val==v?'selected':''}>${lab}</option>`).join('')}</select>`;
+function draw(){const multi=items.length>1;
+$('cards').innerHTML=items.length?items.map((it,i)=>{const c=cod(it.id);let x='';
+ if(c.k=='a')x=`<div class="fld" style="grid-column:1/-1">Allowed modes (kbps)<div class="chips">${c.L.map(([r])=>`<label><input type="checkbox" data-i="${i}" data-set="${r}" ${it.set.includes(r)?'checked':''}>${r}</label>`).join('')}</div><small>With no mode-set in the SDP, all modes are allowed (RFC 4867 §8.1).</small></div>
+ <label class="fld">Rate used for sizing${sel(i,'mode',it.set.map(r=>[r,r]),it.mode)}<small>The highest allowed mode is the worst case.</small></label>
+ <label class="fld">octet-align${sel(i,'oa',[[0,'0: bandwidth-efficient'],[1,'1: octet-aligned']],it.oa)}<small>Octet-aligned pads fields to whole bytes.</small></label>
+ ${it.oa?`<label class="fld">crc${sel(i,'crc',[[0,'0: off'],[1,'1: on (+1 B per frame)']],it.crc)}</label>`:''}
+ <details style="grid-column:1/-1"><summary>SDP-only parameters (no effect on size)</summary><div class="grid" style="margin-top:8px"><label class="fld">mode-change-period${sel(i,'mcp',[[1,'1'],[2,'2']],it.mcp)}</label><label class="fld">mode-change-capability${sel(i,'mcc',[[1,'1'],[2,'2']],it.mcc)}</label><label class="fld">mode-change-neighbor${sel(i,'mcn',[[0,'0'],[1,'1']],it.mcn)}</label></div></details>`;
+ if(c.k=='e')x=`<label class="fld">Bit rate (kbps)${sel(i,'br',EV.map(([r])=>[r,r]),it.br)}<small>Speech bytes per 20 ms frame.</small></label><label class="fld">Packet format${sel(i,'hf',[[0,'Compact (hf-only=0)'],[1,'Header-full (+CMR, +ToC)']],it.hf)}</label>`;
+ if(c.k=='o')x=`<label class="fld">Bit rate (kbps, constant)<input data-i="${i}" data-k="opus" type="number" value="${it.opus}" min="6" max="510" step="any"><small>Opus is variable-rate; this assumes constant.</small></label>`;
+ return `<div class="card"><div class="ch"><div><b>${c.n}</b><small>${c.r}</small></div><button class="x" data-rm="${i}" aria-label="Remove ${c.n}">×</button></div><div class="grid">
+ <label class="fld">Packet time (ms)${sel(i,'pt',ptOpts(c).map(p=>[p,p]),it.pt)}<small>Audio per packet. 20 ms is typical.</small></label>
+ ${multi?`<label class="fld">Share of calls (%)<input data-i="${i}" data-k="mix" type="number" value="${it.mix}" min="0" step="any"></label>`:''}${x}</div>
+ ${c.k=='a'||c.k=='e'?`<code class="fm" id="fm${i}" title="Click to copy"></code>`:''}</div>`}).join(''):'<p class="note" style="margin:0">Add a codec to begin.</p>';
+calc()}
+function save(){try{history.replaceState(null,'','#'+btoa(encodeURIComponent(JSON.stringify({i:items,v:IDS.map(k=>$(k).value),d:drivers}))))}catch(e){}}
+function restore(){try{const s=JSON.parse(decodeURIComponent(atob(location.hash.slice(1))));items=s.i.filter(i=>cod(i.id));IDS.forEach((k,j)=>{if(s.v[j]===undefined)return;let value=s.v[j];if(k==='srtp')value=({'0':'rtp','10':'hmac80','4':'hmac32','16':'gcm128-16','8':'gcm128-16'}[String(value)]||value);$(k).value=value});drivers=s.d;return items.length>0}catch(e){return false}}
+function steps(rw){return rw.map(r=>r[0]=='#'?`<h4>${r[1]}</h4>`:`<div class="st"><span>${r[0]}</span><code>${r[1]}</code><b>${r[2]}</b></div>`).join('')}
+function calc(){const v=i=>+$(i).value||0,P={iph:+$('ipv').value,csrc:Math.max(0,Math.min(15,Math.floor(v('csrc')))),ext:Math.max(0,Math.floor(v('ext'))),srtp:+$('srtp').selectedOptions[0].dataset.bytes,srtpProfile:$('srtp').value,mki:Math.max(0,Math.min(16,Math.floor(v('mki')))),vlan:+$('vlan').value,extra:Math.max(0,v('extra'))};
+ const Rs=items.map(it=>per(it,P));items.forEach((it,i)=>{const e=$('fm'+i);if(e)e.textContent=fmtp(it,cod(it.id))});
+ const cur=H5.map(k=>k==='ipv'?P.iph:k==='srtp'?P.srtpProfile:P[k]);$('presets').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',PRE[b.dataset.p].every((x,j)=>x==cur[j])&&!P.extra));
+ const srtpLabel=$('srtp').selectedOptions[0].textContent.replace(/\s+\(\d+ B tag\)$/,'');$('stack').textContent=`Header details: IPv${P.iph==40?6:4}, ${P.srtp?`${srtpLabel}${P.mki?` + MKI ${P.mki} B`:''}`:'Plain RTP'}, ${P.vlan} VLAN tag${P.vlan==1?'':'s'}${P.extra?`, +${P.extra} B`:''}`;
+ const B=$('basis').value,key={ip:'bip',l2:'bl2',w:'bw'}[B],bn={ip:'IP packet',l2:'L2 frame',w:'on-wire'}[B],N=num('cc'),cps=num('cps'),aht=num('aht'),legs=+$('legs').value,act=Math.min(100,Math.max(1,v('act')))/100,rt=+$('rtcp').value/100,hd=+$('head').value/100,sum=items.reduce((a,i)=>a+i.mix,0);
+ const wl=[{t:'Call model',rw:[['#','Call model (calls = CPS × duration)'],R('Concurrent calls','drives media',f(N)),R('Calls per second','drives signalling',f(cps)+' /s'),R('Call duration','hold time',f(aht)+' s'),R('Bandwidth basis','selected',bn)]}];
+ let dir=0,pp=0,pc=0;
+ Rs.forEach(o=>{const s=o.it.mix/100,n=N*s,b=n*o[key]*legs*act,p=n*o.pps*legs*act;dir+=b;pp+=p;pc+=s*o[key]*legs*act;
+  wl.push({t:lbl(o),rw:[['#','Calls on this codec'],R('Calls',`${f(N)} × ${f(s*100)}%`,f(n)),['#','One direction'],R('Per-stream bandwidth',bn,f(o[key])+' kbps'),R('Bandwidth',`${f(n)} calls × ${f(o[key])} kbps × ${legs} pass × ${f(act)} talking`,f(b)+' kbps'),R('Packets per second',`${f(n)} × ${f(o.pps)} × ${legs} × ${f(act)}`,f(p,0)+' pps')]})});
+ const rtc=dir*rt,tot=(dir+rtc)*(1+hd);pc*=(1+rt)*(1+hd);
+ wl.push({t:'Totals',rw:[['#','Per direction'],R('Voice (RTP)','sum of codecs',f(dir)+' kbps'),R('RTCP',`${f(dir)} × ${f(rt*100,0)}%`,f(rtc)+' kbps'),R('With safety margin',`(${f(dir)} + ${f(rtc)}) × ${f(1+hd,2)}`,f(tot)+' kbps'),['#','Both directions'],R('Total',`2 × ${f(tot)}`,f(tot*2)+' kbps')]});
+ /* results panel */
+ $('r1').textContent=items.length?bw(tot):'–';$('r2').textContent=items.length?`${bw(tot*2)} both directions · ${f(pp,0)} pps`:'Add a codec to see results';
+ const kv=(a,b)=>`<div class="kv"><span>${a}</span><span>${b}</span></div>`,bad=items.length&&Math.abs(sum-100)>.01;
+ $('rw').innerHTML=(bad?`<p class="note warn" style="margin:0 0 8px">Shares add up to ${f(sum)}%. <button id="norm" style="padding:2px 8px">Make 100%</button></p>`:'')+kv('Voice (RTP)',bw(dir))+kv('RTCP',bw(rtc))+kv('Safety margin',bw(tot-dir-rtc))+kv('SRTP packet overhead',P.srtp?`${P.srtp} B tag${P.mki?` + ${P.mki} B MKI`:''}`:'None')+kv('Basis',bn+(legs==2?', in + out':''));
+ const fi=PORTS.findIndex(p=>tot<=p[0]);
+ $('ports').innerHTML=items.length?PORTS.map((p,j)=>{const u=tot/p[0];return`<div class="port ${j==fi?'fit':u>1?'over':''}"><span>${p[1]}</span><div class="bar"><i style="width:${Math.min(100,u*100)}%"></i></div><b>${u>9.99?'>999%':f(u*100,u<.1?1:0)+'%'}</b></div>`}).join('')+`<p class="cap">${fi<0?'Beyond 10000 Mbps: plan additional link capacity.':`Smallest fit: ${PORTS[fi][1]}, up to ${f(PORTS[fi][0]/pc,0)} calls at this mix. Round up when provisioning.`}</p>`:'';
+ /* byte breakdown */
+ const mw=Math.max(1,...Rs.map(o=>o.wire));
+ $('bd').innerHTML=Rs.length?Rs.map(o=>{const rtp=12+4*P.csrc+(P.ext?4+4*P.ext:0),hdr=rtp+P.srtp+(P.srtp?P.mki:0)+8+P.iph+P.extra,eth=o.wire-20-o.pl-hdr,pc2=x=>(x/mw*100).toFixed(2)+'%';
+  return`<div class="row"><span>${lbl(o).replace(/, \d+ ms$/,'')}, ${o.it.pt} ms</span><div class="stack" style="width:${pc2(o.wire)}" role="img" aria-label="${o.pl} B payload, ${hdr} B IP/UDP/RTP headers, ${eth} B Ethernet, 20 B line overhead"><i style="width:${o.pl/o.wire*100}%;background:var(--payload)" title="Payload ${o.pl} B"></i><i style="width:${hdr/o.wire*100}%;background:var(--headers)" title="IP, UDP, RTP ${hdr} B"></i><i style="width:${eth/o.wire*100}%;background:var(--ether)" title="Ethernet ${eth} B"></i><i style="flex:1;background:var(--wire)" title="Preamble and gap 20 B"></i></div><small>${o.wire} B per packet, ${f(o.pl/o.wire*100,0)}% payload</small></div>`}).join('')+`<div class="leg"><span><i style="background:var(--payload)"></i>Payload</span><span><i style="background:var(--headers)"></i>IP, UDP, RTP, SRTP overhead</span><span><i style="background:var(--ether)"></i>Ethernet, VLAN, FCS, padding</span><span><i style="background:var(--wire)"></i>Preamble and gap</span></div>`:'<p class="note" style="margin:0">Add a codec to see its overhead.</p>';
+ $('t1').innerHTML=Rs.length?'<tr><th>Codec</th><th>ptime</th><th>Payload B</th><th>IP pkt B</th><th>Frame B</th><th>pps</th><th>Codec kbps</th><th>IP kbps</th><th>L2 kbps</th><th>Wire kbps</th></tr>'+Rs.map(o=>`<tr><td>${lbl(o).replace(/, \d+ ms$/,'')}</td><td>${o.it.pt}</td><td>${o.pl}</td><td>${o.ip}</td><td>${o.fr}</td><td>${f(o.pps)}</td><td>${f(o.bpl)}</td><td>${f(o.bip)}</td><td>${f(o.bl2)}</td><td>${f(o.bw)}</td></tr>`).join(''):'<tr><td>Add a codec to see results.</td></tr>';
+ WI=Math.min(WI,wl.length-1);$('wsel').innerHTML=wl.map((x,j)=>`<option value="${j}" ${j==WI?'selected':''}>${x.t}</option>`).join('');$('w1').innerHTML=items.length?steps(wl[WI].rw):'';
+ SUM=items.length?`VoIP bandwidth estimate\n${f(N,0)} concurrent calls (${f(cps,2)} CPS × ${f(aht,0)} s)\nCodecs: ${Rs.map(o=>`${lbl(o)} ${f(o.it.mix,0)}%`).join('; ')}\nNetwork: ${$('stack').textContent.replace('Header details: ','')}; basis ${bn}; media passes ${legs}×; RTCP ${f(rt*100,0)}%; margin ${f(hd*100,0)}%\nPer direction: ${bw(tot)}\nBoth directions: ${bw(tot*2)}\nPackets per second: ${f(pp,0)}`:'';
+ chart(N,Rs,key,legs,act,rt,hd,aht);save()}
+function chart(N,Rs,key,legs,act,rt,hd,aht){const w=$('chart');
+ if(!items.length||!(N>0)){w.innerHTML='<p class="note" style="margin:0">Add a codec and enter a call count to see how bandwidth scales.</p>';return}
+ const k=(1+rt)*(1+hd),xm=niceCeil(N*2),sl=Rs.map(o=>o.it.mix/100*o[key]*legs*act*k),ts=sl.reduce((a,b)=>a+b,0),ym=niceCeil(ts*xm),W=720,H=290,L=76,Rm=16,T=12,Bm=40,X=x=>L+(W-L-Rm)*x/xm,Y=y=>H-Bm-(H-T-Bm)*y/ym;let g='';
+ for(let i=0;i<=4;i++){const y=ym*i/4,x=xm*i/4;g+=`<line class="gl" x1="${L}" x2="${W-Rm}" y1="${Y(y)}" y2="${Y(y)}"/><text class="tx" x="${L-8}" y="${Y(y)+4}" text-anchor="end">${bw(y)}</text><text class="tx" x="${X(x)}" y="${H-Bm+16}" text-anchor="middle">${f(x,0)}</text>`+(aht>0?`<text class="tx" x="${X(x)}" y="${H-Bm+29}" text-anchor="middle">${nf(x/aht)} CPS</text>`:'')}
+ const ln=(s,c,sw)=>`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(xm)}" y2="${Y(s*xm)}" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/>`;
+ if(Rs.length>1)Rs.forEach((o,j)=>g+=ln(sl[j],PAL[j%PAL.length],1.4));
+ g+=ln(ts,'var(--acc)',2.4)+`<line x1="${X(N)}" x2="${X(N)}" y1="${Y(0)}" y2="${Y(ts*N)}" stroke="var(--acc)" stroke-dasharray="3 3"/><circle cx="${X(N)}" cy="${Y(ts*N)}" r="5" fill="var(--acc)"><title>${f(N,0)} calls: ${bw(ts*N)}</title></circle>`;
+ w.innerHTML=`<div class="chart-panel"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bandwidth per direction against concurrent calls">${g}</svg><div class="leg"><span><i style="background:var(--acc)"></i>Total with RTCP and margin</span>${Rs.length>1?Rs.map((o,j)=>`<span><i style="background:${PAL[j%PAL.length]}"></i>${lbl(o).replace(/, \d+ ms$/,'')} (voice share)</span>`).join(''):''}</div><p class="note">Axis shows concurrent calls${aht>0?`, with the equivalent CPS at ${f(aht,0)} s per call`:''}. The dot marks your current load.</p></div>`}
+/* ---------- events ---------- */
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.dataset.k=='mix'||t.dataset.k=='opus'){items[t.dataset.i][t.dataset.k]=+t.value||0;calc()}
+ else if(IDS.includes(t.id)){if(TRI.includes(t.id)){drivers=[t.id,...drivers.filter(d=>d!=t.id)].slice(0,2);sync()}calc()}});
+document.addEventListener('change',e=>{const t=e.target,i=t.dataset.i;
+ if(t.id=='wsel'){WI=+t.value;return calc()}
+ if(t.id=='add'){if(t.value)addItem(t.value);t.value='';return}
+ if(i===undefined)return;const it=items[i];
+ if(t.dataset.set){const r=+t.dataset.set;it.set=t.checked?[...it.set,r]:it.set.filter(x=>x!=r);if(!it.set.length)it.set=[r];if(!it.set.includes(it.mode))it.mode=Math.max(...it.set);return draw()}
+ const k=t.dataset.k;if(k=='mix'||k=='opus')return;it[k]=+t.value;if(k=='oa'){if(!it.oa)it.crc=0;return draw()}calc()});
+const flash=(b,m)=>{const o=b.textContent;b.textContent=m;setTimeout(()=>b.textContent=o,1200)};
+document.addEventListener('click',e=>{const t=e.target;
+ if(t.dataset.rm!==undefined){items.splice(+t.dataset.rm,1);if(items.length)rebalance();draw()}
+ else if(t.dataset.p){PRE[t.dataset.p].forEach((x,j)=>$(H5[j]).value=x);$('extra').value=0;calc()}
+ else if(t.id=='norm'){rebalance();draw()}
+ else if(t.id=='copy'&&SUM){navigator.clipboard.writeText(SUM).then(()=>flash(t,'Copied'))}
+ else if(t.classList.contains('fm')){navigator.clipboard.writeText(t.textContent)}});
+if(!restore()){addItem('pcmu');addItem('amrwb')}else draw();
+sync();calc();
+</script></body></html>
